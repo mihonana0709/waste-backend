@@ -74,15 +74,24 @@ async def predict(file: UploadFile = File(...)):
     
     # JSON 形式で返却
     return {"prediction": prediction}
+@app.get("/")
+def root():
+    return {"status": "ok"}
 
 # このスクリプトが直接実行された場合のみ、以下を実行する
 if __name__ == "__main__":     
     import uvicorn               # uvicorn: FastAPI アプリを起動するサーバーを提供するライブラリ
+    import os
+
+    # Render環境では PORT が環境変数として渡される
+    port = int(os.environ.get("PORT", 8000))  # PORTがなければ8000を使う
+    host = os.environ.get("HOST", "127.0.0.1")  # HOSTがなければローカル用
+
     # uvicorn.run() で FastAPI アプリを起動
     uvicorn.run(
         "backend:app",           # 起動するアプリを指定 → backend.py 内の app インスタンス
-        host="127.0.0.1",        # サーバーのホスト IP（ローカルホスト）
-        port=8000,               # サーバーのポート番号
+        host=host,        # サーバーのホスト IP（ローカルホスト）
+        port=port,               # サーバーのポート番号
         reload=True              # True にするとコード変更を監視して自動リロード
     )
 

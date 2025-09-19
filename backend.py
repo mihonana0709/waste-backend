@@ -6,10 +6,18 @@ import torchvision.transforms as transforms  # 画像の前処理用
 from PIL import Image               # 画像読み込み用ライブラリ
 from fastapi import FastAPI, UploadFile, File  # FastAPI の Web アプリ用
 import io                           # バイトデータを扱うための標準ライブラリ
-
+from fastapi.middleware.cors import CORSMiddleware
 # ===================== FastAPI アプリケーションの生成 =====================
 app = FastAPI()  # FastAPI のインスタンス作成。これがアプリ全体のベース
-
+# CORS設定を追加
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 必要に応じて制限可能
+    # allow_origins=["https://your-streamlit-app.streamlit.app"]
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # ===================== 画像前処理の定義 =====================
 # ResNet18 に入力する画像サイズと正規化を設定
 transform = transforms.Compose([
@@ -50,7 +58,7 @@ def predict_image(image_bytes):
     if model is None:
         return "モデル未ロード"
     # 通常の推論処理
-    
+
     # バイトデータを PIL Image に変換
     img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     

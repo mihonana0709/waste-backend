@@ -25,9 +25,20 @@ num_features = model.fc.in_features        # 最終全結合層の入力特徴�
 model.fc = nn.Linear(num_features, 2)     # 2クラス分類用に全結合層を置き換え
 
 # 学習済みモデルのロード
-model_path = "waste_classifier_resnet18.pth"  # 保存済みモデルのファイルパス
-model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))  # CPU 用にロード
-model.eval()  # 推論モードに切り替え（Dropout などを無効化）
+# model_path = "waste_classifier_resnet18.pth"  # 保存済みモデルのファイルパス
+# model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))  # CPU 用にロード
+# model.eval()  # 推論モードに切り替え（Dropout などを無効化）
+
+import os
+
+model_path = os.path.join(os.path.dirname(__file__), "waste_classifier_resnet18.pth")
+
+try:
+    model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
+    model.eval()
+except Exception as e:
+    print(f"モデルの読み込みに失敗しました: {e}")
+    model = None
 
 # ===================== 推論用関数 =====================
 def predict_image(image_bytes):
@@ -36,6 +47,10 @@ def predict_image(image_bytes):
     image_bytes: アップロードされた画像データ（バイト型）
     return: 分類結果（文字列）
     """
+    if model is None:
+        return "モデル未ロード"
+    # 通常の推論処理
+    
     # バイトデータを PIL Image に変換
     img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     
@@ -45,6 +60,8 @@ def predict_image(image_bytes):
     # バッチ次元を追加 (1, C, H, W)
     batch_t = torch.unsqueeze(img_t, 0)
     
+
+
     # 推論
     with torch.no_grad():  # 勾配計算を無効化（高速化＆メモリ節約）
         out = model(batch_t)
